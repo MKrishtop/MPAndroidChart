@@ -33,6 +33,8 @@ public class LineChartRenderer extends LineRadarRenderer {
      */
     protected Paint mCirclePaintInner;
 
+    protected Paint mLabelBackgroundPaint;
+
     /**
      * Bitmap object used for drawing the paths (otherwise they are too long if
      * rendered directly on the canvas)
@@ -65,6 +67,10 @@ public class LineChartRenderer extends LineRadarRenderer {
         mCirclePaintInner = new Paint(Paint.ANTI_ALIAS_FLAG);
         mCirclePaintInner.setStyle(Paint.Style.FILL);
         mCirclePaintInner.setColor(Color.WHITE);
+
+        mLabelBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mLabelBackgroundPaint.setStyle(Paint.Style.FILL);
+        mLabelBackgroundPaint.setColor(Color.parseColor("#b0000000"));
     }
 
     @Override
@@ -466,28 +472,24 @@ public class LineChartRenderer extends LineRadarRenderer {
                     Entry entry = dataSet.getEntryForIndex(j / 2 + minx);
 
                     if (dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END) {
-                        float valueX;
-                        float valueY;
+                        float valueX = 0f;
+                        float valueY = 0f;
 
                         String text = dataSet.getValueFormatter().getFormattedValue(entry.getVal(), entry, i, mViewPortHandler);
-                        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                        paint.setStyle(Paint.Style.FILL);
-                        paint.setColor(Color.parseColor("#60000000"));
+
 
                         float labelXOffset = mValuePaint.measureText(text) / 2f;
 
                         if (j == 0) {
-                            valueX = x + valOffset + labelXOffset;
+                            valueX = x + valOffset + labelXOffset + 16f;
                             valueY = y + dataSet.getValueTextSize() / 3f;
-
-                            c.drawRoundRect(new RectF(valueX - labelXOffset - 4f, valueY - dataSet.getValueTextSize() -4f, valueX + labelXOffset +4f, valueY +4f), 4f, 4f, paint);
-
-                            drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, valueX, valueY, dataSet.getValueTextColor(j / 2));
                         } else if (j == (positions.length - 2)) {
-                            valueX = x - valOffset - labelXOffset;
+                            valueX = x - valOffset - labelXOffset - 16f;
                             valueY = y + dataSet.getValueTextSize() / 3f;
+                        }
 
-                            c.drawRoundRect(new RectF(valueX - labelXOffset - 4f, valueY - dataSet.getValueTextSize() -4f, valueX + labelXOffset +4f, valueY +4f), 4f, 4f, paint);
+                        if (j == 0 || j == (positions.length - 2)) {
+                            c.drawRoundRect(new RectF(valueX - labelXOffset - 4f, valueY - dataSet.getValueTextSize(), valueX + labelXOffset +4f, valueY +8f), 4f, 4f, mLabelBackgroundPaint);
 
                             drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, valueX, valueY, dataSet.getValueTextColor(j / 2));
                         }
