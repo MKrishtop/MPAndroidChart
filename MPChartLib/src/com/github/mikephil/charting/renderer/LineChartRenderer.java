@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 
 import com.github.mikephil.charting.animation.ChartAnimator;
@@ -458,10 +459,42 @@ public class LineChartRenderer extends LineRadarRenderer {
                     if (!mViewPortHandler.isInBoundsLeft(x) || !mViewPortHandler.isInBoundsY(y))
                         continue;
 
+                    if (dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END
+                            && !(j == 0 || j == (positions.length - 2)))
+                        continue;
+
                     Entry entry = dataSet.getEntryForIndex(j / 2 + minx);
 
-                    drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, x,
-                            y - valOffset, dataSet.getValueTextColor(j / 2));
+                    if (dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END) {
+                        float valueX;
+                        float valueY;
+
+                        String text = dataSet.getValueFormatter().getFormattedValue(entry.getVal(), entry, i, mViewPortHandler);
+                        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                        paint.setStyle(Paint.Style.FILL);
+                        paint.setColor(Color.parseColor("#60000000"));
+
+                        float labelXOffset = mValuePaint.measureText(text) / 2f;
+
+                        if (j == 0) {
+                            valueX = x + valOffset + labelXOffset;
+                            valueY = y + dataSet.getValueTextSize() / 3f;
+
+                            c.drawRoundRect(new RectF(valueX - labelXOffset - 4f, valueY - dataSet.getValueTextSize() -4f, valueX + labelXOffset +4f, valueY +4f), 4f, 4f, paint);
+
+                            drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, valueX, valueY, dataSet.getValueTextColor(j / 2));
+                        } else if (j == (positions.length - 2)) {
+                            valueX = x - valOffset - labelXOffset;
+                            valueY = y + dataSet.getValueTextSize() / 3f;
+
+                            c.drawRoundRect(new RectF(valueX - labelXOffset - 4f, valueY - dataSet.getValueTextSize() -4f, valueX + labelXOffset +4f, valueY +4f), 4f, 4f, paint);
+
+                            drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, valueX, valueY, dataSet.getValueTextColor(j / 2));
+                        }
+                    } else {
+                        drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, x,
+                                y - valOffset, dataSet.getValueTextColor(j / 2));
+                    }
                 }
             }
         }
@@ -524,11 +557,16 @@ public class LineChartRenderer extends LineRadarRenderer {
                 if (!mViewPortHandler.isInBoundsLeft(x) || !mViewPortHandler.isInBoundsY(y))
                     continue;
 
+                if (dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END
+                        && !(j == 0 || j == (count - 2)))
+                    continue;
+
                 int circleColor = dataSet.getCircleColor(j / 2 + minx);
 
                 mRenderPaint.setColor(circleColor);
+                mRenderPaint.setStyle(Paint.Style.STROKE);
 
-                c.drawCircle(x, y, dataSet.getCircleRadius(),
+                c.drawCircle(x, y, dataSet.getCircleRadius() - 2f,
                         mRenderPaint);
 
                 if (dataSet.isDrawCircleHoleEnabled()

@@ -140,8 +140,9 @@ public abstract class DataRenderer extends Renderer {
      * @param color
      */
     public void drawValue(Canvas c, ValueFormatter formatter, float value, Entry entry, int dataSetIndex, float x, float y, int color) {
+        String text = formatter.getFormattedValue(value, entry, dataSetIndex, mViewPortHandler);
         mValuePaint.setColor(color);
-        c.drawText(formatter.getFormattedValue(value, entry, dataSetIndex, mViewPortHandler), x, y, mValuePaint);
+        c.drawText(text, x, y, mValuePaint);
     }
 
     /**

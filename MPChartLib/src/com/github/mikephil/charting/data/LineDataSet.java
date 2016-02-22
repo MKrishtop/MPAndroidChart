@@ -4,7 +4,6 @@ package com.github.mikephil.charting.data;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
-import android.graphics.drawable.Drawable;
 
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
@@ -37,6 +36,8 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
 
     /** if true, drawing circles is enabled */
     private boolean mDrawCircles = true;
+
+    private int mDrawsStyle = STYLE_ALL;
 
     /** if true, cubic lines are drawn instead of linear */
     private boolean mDrawCubic = false;
@@ -184,6 +185,15 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
     @Override
     public boolean isDrawCirclesEnabled() {
         return mDrawCircles;
+    }
+
+    public void setDrawStyle(int drawStyle) {
+        this.mDrawsStyle = drawStyle;
+    }
+
+    @Override
+    public int drawStyle() {
+        return mDrawsStyle;
     }
 
     /**

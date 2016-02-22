@@ -11,6 +11,9 @@ import com.github.mikephil.charting.formatter.FillFormatter;
  */
 public interface ILineDataSet extends ILineRadarDataSet<Entry> {
 
+    int STYLE_ALL = 1;
+    int STYLE_FIRST_END = 2;
+
     /**
      * Returns the intensity of the cubic lines (the effect intensity).
      * Max = 1f = very cubic, Min = 0.05f = low cubic effect, Default: 0.2f
@@ -46,6 +49,8 @@ public interface ILineDataSet extends ILineRadarDataSet<Entry> {
      * @return
      */
     boolean isDrawCirclesEnabled();
+
+    int drawStyle();
 
     /**
      * Returns the color of the inner circle (the circle-hole).

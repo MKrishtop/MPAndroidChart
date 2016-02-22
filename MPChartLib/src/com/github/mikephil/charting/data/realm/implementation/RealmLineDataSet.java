@@ -188,6 +188,11 @@ public class RealmLineDataSet<T extends RealmObject> extends RealmLineRadarDataS
         return mDrawCircles;
     }
 
+    @Override
+    public int drawStyle() {
+        throw new UnsupportedOperationException("copy from LineDataSet");
+    }
+
     /**
      * If set to true, the linechart lines are drawn in cubic-style instead of
      * linear. This affects performance! Default: false
