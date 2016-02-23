@@ -52,6 +52,7 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
     private long mDecelerationLastTime = 0;
     private PointF mDecelerationCurrentPoint = new PointF();
     private PointF mDecelerationVelocity = new PointF();
+    private boolean mNeedHighlightOnDrug = false;
 
     public BarLineChartTouchListener(BarLineChartBase<? extends BarLineScatterCandleBubbleData<? extends IBarLineScatterCandleBubbleDataSet<? extends Entry>>> chart, Matrix touchMatrix) {
         super(chart);
@@ -76,6 +77,14 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
 
         if (mTouchMode == NONE) {
             mGestureDetector.onTouchEvent(event);
+        }
+
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+//                mChart.highlightTouch(null);
+//                mLastHighlighted = null;
+                mNeedHighlightOnDrug = false;
         }
 
         if (!mChart.isDragEnabled() && (!mChart.isScaleXEnabled() && !mChart.isScaleYEnabled()))
@@ -150,11 +159,12 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
                         if (!mChart.isFullyZoomedOut() && mChart.isDragEnabled()) {
                             mTouchMode = DRAG;
                         } else {
+                            if (mNeedHighlightOnDrug) {
+                                mLastGesture = ChartGesture.DRAG;
 
-                            mLastGesture = ChartGesture.DRAG;
-
-                            if (mChart.isHighlightPerDragEnabled())
-                                performHighlightDrag(event);
+                                if (mChart.isHighlightPerDragEnabled())
+                                    performHighlightDrag(event);
+                            }
                         }
 
                     } else if (mChart.isDragEnabled()) {
@@ -518,6 +528,8 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
 
             l.onChartLongPressed(e);
         }
+
+        mNeedHighlightOnDrug = true;
     }
 
     @Override
@@ -536,11 +548,12 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
         }
 
 
-        Highlight h = mChart.getHighlightByTouchPoint(e.getX(), e.getY());
-        performHighlight(h, e);
+//        Highlight h = mChart.getHighlightByTouchPoint(e.getX(), e.getY());
+//        performHighlight(h, e);
 
         return super.onSingleTapUp(e);
     }
+
 
 //    @Override
 //    public boolean onSingleTapConfirmed(MotionEvent e) {

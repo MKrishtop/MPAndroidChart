@@ -55,6 +55,9 @@ public class LineChartRenderer extends LineRadarRenderer {
     protected Path cubicPath = new Path();
     protected Path cubicFillPath = new Path();
 
+    protected Path quadraticPath = new Path();
+    protected Path quadraticFillPath = new Path();
+
     protected LineBuffer[] mLineBuffers;
 
     protected CircleBuffer[] mCircleBuffers;
@@ -70,7 +73,7 @@ public class LineChartRenderer extends LineRadarRenderer {
 
         mLabelBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mLabelBackgroundPaint.setStyle(Paint.Style.FILL);
-        mLabelBackgroundPaint.setColor(Color.parseColor("#b0000000"));
+        mLabelBackgroundPaint.setColor(Color.parseColor("#c0ffffff"));
     }
 
     @Override
@@ -126,14 +129,16 @@ public class LineChartRenderer extends LineRadarRenderer {
         mRenderPaint.setStrokeWidth(dataSet.getLineWidth());
         mRenderPaint.setPathEffect(dataSet.getDashPathEffect());
 
-        // if drawing cubic lines is enabled
-        if (dataSet.isDrawCubicEnabled()) {
-
-            drawCubic(c, dataSet);
-
-            // draw normal (straight) lines
-        } else {
-            drawLinear(c, dataSet);
+        switch (dataSet.getApproximation()) {
+            case ILineDataSet.APPROXIMATION_NONE:
+                drawLinear(c, dataSet);
+                break;
+            case ILineDataSet.APPROXIMATION_QUADRATIC:
+                drawQuadratic(c, dataSet);
+                break;
+            case ILineDataSet.APPROXIMATION_CUBIC:
+                drawCubic(c, dataSet);
+                break;
         }
 
         mRenderPaint.setPathEffect(null);
@@ -417,8 +422,98 @@ public class LineChartRenderer extends LineRadarRenderer {
         return filled;
     }
 
+    /**
+     * Draws a normal line.
+     *
+     * @param c
+     * @param dataSet
+     */
+    protected void drawQuadratic(Canvas c, ILineDataSet dataSet) {
+        Transformer trans = mChart.getTransformer(dataSet.getAxisDependency());
+
+        int entryCount = dataSet.getEntryCount();
+
+        Entry entryFrom = dataSet.getEntryForXIndex((mMinX < 0) ? 0 : mMinX, DataSet.Rounding.DOWN);
+        Entry entryTo = dataSet.getEntryForXIndex(mMaxX, DataSet.Rounding.UP);
+
+        int diff = (entryFrom == entryTo) ? 1 : 0;
+        int minx = Math.max(dataSet.getEntryIndex(entryFrom) - diff, 0);
+        int maxx = Math.min(dataSet.getEntryIndex(entryTo) + 1, entryCount);
+
+        float phaseX = mAnimator.getPhaseX();
+        float phaseY = mAnimator.getPhaseY();
+
+        float intensity = dataSet.getCubicIntensity();
+
+        quadraticPath.reset();
+
+        int size = (int) Math.ceil((maxx - minx) * phaseX + minx);
+
+        if (size - minx >= 2) {
+            float midX = 0f;
+            float midY = 0f;
+
+            Entry prev = dataSet.getEntryForIndex(minx);
+            Entry cur = dataSet.getEntryForIndex(minx);
+
+            // let the spline start
+            quadraticPath.moveTo(cur.getXIndex(), cur.getVal() * phaseY);
+
+            for (int j = minx + 1, count = Math.min(size, entryCount); j < count; j++) {
+                prev = dataSet.getEntryForIndex(j - 1);
+                cur = dataSet.getEntryForIndex(j);
+
+                midX = ((prev.getXIndex() + cur.getXIndex()) / 2f);
+                midY = ((prev.getVal() + cur.getVal()) / 2f);
+
+//                p.quadTo ((start.x + mid.x) / 2, start.y, mid.x, mid.y);
+//                p.quadTo ((mid.x + end.x) / 2, end.y, end.x, end.y);
+
+                quadraticPath.quadTo((prev.getXIndex() + midX) / 2, prev.getVal(), midX, midY);
+                quadraticPath.quadTo((midX + cur.getXIndex()) / 2, cur.getVal(), cur.getXIndex(), cur.getVal());
+
+//                quadraticPath.quadTo(prev.getXIndex() + curDx/2f, cur.getVal() + curDy/2f,
+//                        cur.getXIndex(), cur.getVal() * phaseY);
+            }
+
+//            if (size > entryCount - 1) {
+//                prev = dataSet.getEntryForIndex(entryCount - 2);
+//                cur = dataSet.getEntryForIndex(entryCount - 1);
+//
+//                curDx = (cur.getXIndex() - prev.getXIndex()) * intensity;
+//                curDy = (cur.getVal() - prev.getVal()) * intensity;
+//
+//                quadraticPath.quadTo((prev.getXIndex() + prev.getXIndex() + curDx/2f) / 2, prev.getVal(), prev.getXIndex() + curDx/2f, cur.getVal() + curDy/2f);
+//                quadraticPath.quadTo((prev.getXIndex() + curDx/2f + cur.getXIndex()) / 2, cur.getVal(), cur.getXIndex(), cur.getVal());
+//
+                // the last quad
+//                quadraticPath.quadTo(prev.getXIndex() + curDx/2f, cur.getVal() + curDy/2f,
+//                        cur.getXIndex(), cur.getVal() * phaseY);
+//            }
+        }
+
+        // if drawing filled is enabled
+        if (dataSet.isDrawFilledEnabled() && entryCount > 0) {
+            //TODO drawQuadraticFill
+        }
+
+        mRenderPaint.setColor(dataSet.getColor());
+
+        mRenderPaint.setStyle(Paint.Style.STROKE);
+
+        trans.pathValueToPixel(quadraticPath);
+
+        mBitmapCanvas.drawPath(quadraticPath, mRenderPaint);
+
+        mRenderPaint.setPathEffect(null);
+    }
+
     @Override
     public void drawValues(Canvas c) {
+        drawValues(c, null);
+    }
+
+    public void drawValues(Canvas c, Highlight[] highlights) {
 
         if (mChart.getLineData().getYValCount() < mChart.getMaxVisibleCount()
                 * mViewPortHandler.getScaleX()) {
@@ -465,9 +560,14 @@ public class LineChartRenderer extends LineRadarRenderer {
                     if (!mViewPortHandler.isInBoundsLeft(x) || !mViewPortHandler.isInBoundsY(y))
                         continue;
 
-                    if (dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END
-                            && !(j == 0 || j == (positions.length - 2)))
-                        continue;
+                    if (highlights == null) {
+                        if ((dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END
+                                && (!(j == 0 || j == (positions.length - 2)))))
+                            continue;
+                    } else {
+                        if (!hasIndexInHighlighted(highlights, j / 2))
+                            continue;
+                    }
 
                     Entry entry = dataSet.getEntryForIndex(j / 2 + minx);
 
@@ -477,19 +577,26 @@ public class LineChartRenderer extends LineRadarRenderer {
 
                         String text = dataSet.getValueFormatter().getFormattedValue(entry.getVal(), entry, i, mViewPortHandler);
 
-
                         float labelXOffset = mValuePaint.measureText(text) / 2f;
 
                         if (j == 0) {
-                            valueX = x + valOffset + labelXOffset + 16f;
+                            valueX = x + valOffset + labelXOffset + 8f;
                             valueY = y + dataSet.getValueTextSize() / 3f;
                         } else if (j == (positions.length - 2)) {
-                            valueX = x - valOffset - labelXOffset - 16f;
+                            valueX = x - valOffset - labelXOffset - 8f;
                             valueY = y + dataSet.getValueTextSize() / 3f;
                         }
 
-                        if (j == 0 || j == (positions.length - 2)) {
-                            c.drawRoundRect(new RectF(valueX - labelXOffset - 4f, valueY - dataSet.getValueTextSize(), valueX + labelXOffset +4f, valueY +8f), 4f, 4f, mLabelBackgroundPaint);
+                        if (highlights != null) {
+                            if (j == 0 || j == (positions.length - 2)) {
+                                x = valueX;
+                            }
+                            c.drawRoundRect(new RectF(x - labelXOffset - 4f, mViewPortHandler.contentTop() + 110f - dataSet.getValueTextSize(), x + labelXOffset + 4f, mViewPortHandler.contentTop() + 110f + 8f), 4f, 4f, mLabelBackgroundPaint);
+
+                            drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, x,
+                                    mViewPortHandler.contentTop() + 110f, dataSet.getValueTextColor(j / 2));
+                        } else if (j == 0 || j == (positions.length - 2)) {
+                            c.drawRoundRect(new RectF(valueX - labelXOffset - 4f, valueY - dataSet.getValueTextSize(), valueX + labelXOffset + 4f, valueY + 8f), 4f, 4f, mLabelBackgroundPaint);
 
                             drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, valueX, valueY, dataSet.getValueTextColor(j / 2));
                         }
@@ -508,6 +615,10 @@ public class LineChartRenderer extends LineRadarRenderer {
     }
 
     protected void drawCircles(Canvas c) {
+        drawCircles(c, null);
+    }
+
+    protected void drawCircles(Canvas c, Highlight[] highlights) {
 
         mRenderPaint.setStyle(Paint.Style.FILL);
 
@@ -559,8 +670,8 @@ public class LineChartRenderer extends LineRadarRenderer {
                 if (!mViewPortHandler.isInBoundsLeft(x) || !mViewPortHandler.isInBoundsY(y))
                     continue;
 
-                if (dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END
-                        && !(j == 0 || j == (count - 2)))
+                if ((dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END
+                        && (!(j == 0 || j == (count - 2)))) && !hasIndexInHighlighted(highlights, j / 2))
                     continue;
 
                 int circleColor = dataSet.getCircleColor(j / 2 + minx);
@@ -578,6 +689,18 @@ public class LineChartRenderer extends LineRadarRenderer {
                             mCirclePaintInner);
             }
         }
+    }
+
+    private boolean hasIndexInHighlighted(Highlight[] highlights, int index) {
+        if (highlights == null) return false;
+
+        for (Highlight highlight : highlights) {
+            if (highlight.getXIndex() == index) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -614,6 +737,9 @@ public class LineChartRenderer extends LineRadarRenderer {
             // draw the lines
             drawHighlightLines(c, pts, set);
         }
+
+        drawCircles(c, indices);
+        drawValues(c, indices);
     }
 
     /**

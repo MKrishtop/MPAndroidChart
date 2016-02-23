@@ -3,7 +3,6 @@ package com.github.mikephil.charting.data.realm.implementation;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
-import android.graphics.drawable.Drawable;
 
 import com.github.mikephil.charting.data.realm.base.RealmLineRadarDataSet;
 import com.github.mikephil.charting.formatter.DefaultFillFormatter;
@@ -126,6 +125,11 @@ public class RealmLineDataSet<T extends RealmObject> extends RealmLineRadarDataS
         return mCubicIntensity;
     }
 
+    @Override
+    public int getApproximation() {
+        return isDrawCubicEnabled() ? ILineDataSet.APPROXIMATION_CUBIC : ILineDataSet.APPROXIMATION_NONE ;
+    }
+
     /**
      * sets the size (radius) of the circle shpaed value indicators, default
      * size = 4f
@@ -203,7 +207,6 @@ public class RealmLineDataSet<T extends RealmObject> extends RealmLineRadarDataS
         mDrawCubic = enabled;
     }
 
-    @Override
     public boolean isDrawCubicEnabled() {
         return mDrawCubic;
     }

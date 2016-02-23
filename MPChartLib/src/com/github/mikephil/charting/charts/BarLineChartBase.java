@@ -29,6 +29,8 @@ import com.github.mikephil.charting.interfaces.datasets.IBarLineScatterCandleBub
 import com.github.mikephil.charting.jobs.MoveViewJob;
 import com.github.mikephil.charting.listener.BarLineChartTouchListener;
 import com.github.mikephil.charting.listener.OnDrawListener;
+import com.github.mikephil.charting.renderer.CombinedChartRenderer;
+import com.github.mikephil.charting.renderer.LineChartRenderer;
 import com.github.mikephil.charting.renderer.XAxisRenderer;
 import com.github.mikephil.charting.renderer.YAxisRenderer;
 import com.github.mikephil.charting.utils.PointD;
@@ -189,6 +191,8 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
         if (mData == null)
             return;
 
+        mRenderer.setHighlighted(mIndicesToHighlight);
+
         long starttime = System.currentTimeMillis();
         calcModulus();
 
@@ -266,7 +270,9 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleBubbleData<
         mAxisRendererLeft.renderAxisLabels(canvas);
         mAxisRendererRight.renderAxisLabels(canvas);
 
-        mRenderer.drawValues(canvas);
+        if (!(mRenderer instanceof CombinedChartRenderer || mRenderer instanceof LineChartRenderer) || mIndicesToHighlight == null) {
+            mRenderer.drawValues(canvas);
+        }
 
         mLegendRenderer.renderLegend(canvas);
 

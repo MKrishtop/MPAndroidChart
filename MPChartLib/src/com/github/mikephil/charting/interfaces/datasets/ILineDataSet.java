@@ -14,6 +14,10 @@ public interface ILineDataSet extends ILineRadarDataSet<Entry> {
     int STYLE_ALL = 1;
     int STYLE_FIRST_END = 2;
 
+    int APPROXIMATION_NONE = 1;
+    int APPROXIMATION_QUADRATIC = 2;
+    int APPROXIMATION_CUBIC = 3;
+
     /**
      * Returns the intensity of the cubic lines (the effect intensity).
      * Max = 1f = very cubic, Min = 0.05f = low cubic effect, Default: 0.2f
@@ -23,11 +27,10 @@ public interface ILineDataSet extends ILineRadarDataSet<Entry> {
     float getCubicIntensity();
 
     /**
-     * Returns true if drawing cubic lines is enabled, false if not.
      *
      * @return
      */
-    boolean isDrawCubicEnabled();
+    int getApproximation();
 
     /**
      * Returns the size of the drawn circles.

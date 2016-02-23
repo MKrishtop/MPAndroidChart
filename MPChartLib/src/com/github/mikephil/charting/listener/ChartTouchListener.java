@@ -80,6 +80,9 @@ public abstract class ChartTouchListener<T extends Chart<?>> extends GestureDete
 
         if (l != null)
             l.onChartGestureEnd(me, mLastGesture);
+
+        mChart.highlightTouch(null);
+        mLastHighlighted = null;
     }
 
     /**

@@ -39,8 +39,7 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
 
     private int mDrawsStyle = STYLE_ALL;
 
-    /** if true, cubic lines are drawn instead of linear */
-    private boolean mDrawCubic = false;
+    private int mApproximation = ILineDataSet.APPROXIMATION_NONE;
 
     private boolean mDrawCircleHole = true;
 
@@ -74,7 +73,8 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
         copied.mCircleColors = mCircleColors;
         copied.mDashPathEffect = mDashPathEffect;
         copied.mDrawCircles = mDrawCircles;
-        copied.mDrawCubic = mDrawCubic;
+        copied.mDrawsStyle = mDrawsStyle;
+        copied.mApproximation = mApproximation;
         copied.mHighLightColor = mHighLightColor;
 
         return copied;
@@ -101,6 +101,10 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
         return mCubicIntensity;
     }
 
+    @Override
+    public int getApproximation() {
+        return mApproximation;
+    }
 
     /**
      * sets the radius of the drawn circles.
@@ -196,19 +200,8 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
         return mDrawsStyle;
     }
 
-    /**
-     * If set to true, the linechart lines are drawn in cubic-style instead of
-     * linear. This affects performance! Default: false
-     * 
-     * @param enabled
-     */
-    public void setDrawCubic(boolean enabled) {
-        mDrawCubic = enabled;
-    }
-
-    @Override
-    public boolean isDrawCubicEnabled() {
-        return mDrawCubic;
+    public void setApproximation(int approximation) {
+        mApproximation = approximation;
     }
 
     /** ALL CODE BELOW RELATED TO CIRCLE-COLORS */
