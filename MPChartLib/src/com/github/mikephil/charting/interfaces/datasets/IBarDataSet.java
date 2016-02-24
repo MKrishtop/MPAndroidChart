@@ -53,4 +53,7 @@ public interface IBarDataSet extends IBarLineScatterCandleBubbleDataSet<BarEntry
      * @return
      */
     String[] getStackLabels();
+
+    int getSecondaryColor();
+    Integer getSecondaryIndex();
 }

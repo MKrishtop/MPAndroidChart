@@ -1,6 +1,7 @@
 package com.github.mikephil.charting.renderer;
 
 import android.graphics.Canvas;
+import android.util.DisplayMetrics;
 
 import com.github.mikephil.charting.animation.ChartAnimator;
 import com.github.mikephil.charting.charts.CombinedChart;
@@ -22,8 +23,11 @@ public class CombinedChartRenderer extends DataRenderer {
      */
     protected List<DataRenderer> mRenderers;
 
-    public CombinedChartRenderer(CombinedChart chart, ChartAnimator animator, ViewPortHandler viewPortHandler) {
+    DisplayMetrics displayMetrics;
+
+    public CombinedChartRenderer(CombinedChart chart, ChartAnimator animator, ViewPortHandler viewPortHandler, DisplayMetrics displayMetrics) {
         super(animator, viewPortHandler);
+        this.displayMetrics = displayMetrics;
 
         createRenderers(chart, animator, viewPortHandler);
     }
@@ -55,7 +59,7 @@ public class CombinedChartRenderer extends DataRenderer {
                     break;
                 case LINE:
                     if (chart.getLineData() != null)
-                        mRenderers.add(new LineChartRenderer(chart, animator, viewPortHandler));
+                        mRenderers.add(new LineChartRenderer(chart, animator, viewPortHandler, displayMetrics));
                     break;
                 case CANDLE:
                     if (chart.getCandleData() != null)

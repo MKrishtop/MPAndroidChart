@@ -36,6 +36,9 @@ public class BarDataSet extends BarLineScatterCandleBubbleDataSet<BarEntry> impl
      */
     private int mEntryCountStacks = 0;
 
+    private int mSecondaryColor;
+    private Integer mSecondaryIndex;
+
     /**
      * array of labels used to describe the different values of the stacked bars
      */
@@ -244,5 +247,23 @@ public class BarDataSet extends BarLineScatterCandleBubbleDataSet<BarEntry> impl
     @Override
     public String[] getStackLabels() {
         return mStackLabels;
+    }
+
+    @Override
+    public int getSecondaryColor() {
+        return mSecondaryColor;
+    }
+
+    @Override
+    public Integer getSecondaryIndex() {
+        return mSecondaryIndex;
+    }
+
+    public void setSecondaryColor(int color) {
+        mSecondaryColor = color;
+    }
+
+    public void setSecondaryIndex(int index) {
+        mSecondaryIndex = index;
     }
 }

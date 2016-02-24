@@ -124,7 +124,12 @@ public class BarChartRenderer extends DataRenderer {
 
             mRenderPaint.setColor(dataSet.getColor());
 
+            int counter = 0;
             for (int j = 0; j < buffer.size(); j += 4) {
+
+                if (dataSet.getSecondaryIndex() != null && counter++ >= dataSet.getSecondaryIndex()) {
+                    mRenderPaint.setColor(dataSet.getSecondaryColor());
+                }
 
                 if (!mViewPortHandler.isInBoundsLeft(buffer.buffer[j + 2]))
                     continue;

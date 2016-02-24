@@ -7,6 +7,8 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 
 import com.github.mikephil.charting.animation.ChartAnimator;
 import com.github.mikephil.charting.buffer.CircleBuffer;
@@ -62,10 +64,13 @@ public class LineChartRenderer extends LineRadarRenderer {
 
     protected CircleBuffer[] mCircleBuffers;
 
+    DisplayMetrics displayMetrics;
+
     public LineChartRenderer(LineDataProvider chart, ChartAnimator animator,
-                             ViewPortHandler viewPortHandler) {
+                             ViewPortHandler viewPortHandler, DisplayMetrics displayMetrics) {
         super(animator, viewPortHandler);
         mChart = chart;
+        this.displayMetrics = displayMetrics;
 
         mCirclePaintInner = new Paint(Paint.ANTI_ALIAS_FLAG);
         mCirclePaintInner.setStyle(Paint.Style.FILL);
@@ -466,30 +471,10 @@ public class LineChartRenderer extends LineRadarRenderer {
                 midX = ((prev.getXIndex() + cur.getXIndex()) / 2f);
                 midY = ((prev.getVal() + cur.getVal()) / 2f);
 
-//                p.quadTo ((start.x + mid.x) / 2, start.y, mid.x, mid.y);
-//                p.quadTo ((mid.x + end.x) / 2, end.y, end.x, end.y);
-
                 quadraticPath.quadTo((prev.getXIndex() + midX) / 2, prev.getVal(), midX, midY);
                 quadraticPath.quadTo((midX + cur.getXIndex()) / 2, cur.getVal(), cur.getXIndex(), cur.getVal());
-
-//                quadraticPath.quadTo(prev.getXIndex() + curDx/2f, cur.getVal() + curDy/2f,
-//                        cur.getXIndex(), cur.getVal() * phaseY);
             }
 
-//            if (size > entryCount - 1) {
-//                prev = dataSet.getEntryForIndex(entryCount - 2);
-//                cur = dataSet.getEntryForIndex(entryCount - 1);
-//
-//                curDx = (cur.getXIndex() - prev.getXIndex()) * intensity;
-//                curDy = (cur.getVal() - prev.getVal()) * intensity;
-//
-//                quadraticPath.quadTo((prev.getXIndex() + prev.getXIndex() + curDx/2f) / 2, prev.getVal(), prev.getXIndex() + curDx/2f, cur.getVal() + curDy/2f);
-//                quadraticPath.quadTo((prev.getXIndex() + curDx/2f + cur.getXIndex()) / 2, cur.getVal(), cur.getXIndex(), cur.getVal());
-//
-                // the last quad
-//                quadraticPath.quadTo(prev.getXIndex() + curDx/2f, cur.getVal() + curDy/2f,
-//                        cur.getXIndex(), cur.getVal() * phaseY);
-//            }
         }
 
         // if drawing filled is enabled
@@ -580,10 +565,10 @@ public class LineChartRenderer extends LineRadarRenderer {
                         float labelXOffset = mValuePaint.measureText(text) / 2f;
 
                         if (j == 0) {
-                            valueX = x + valOffset + labelXOffset + 8f;
+                            valueX = x + valOffset + labelXOffset + dpToPx(3);
                             valueY = y + dataSet.getValueTextSize() / 3f;
                         } else if (j == (positions.length - 2)) {
-                            valueX = x - valOffset - labelXOffset - 8f;
+                            valueX = x - valOffset - labelXOffset - dpToPx(3);
                             valueY = y + dataSet.getValueTextSize() / 3f;
                         }
 
@@ -591,12 +576,14 @@ public class LineChartRenderer extends LineRadarRenderer {
                             if (j == 0 || j == (positions.length - 2)) {
                                 x = valueX;
                             }
-                            c.drawRoundRect(new RectF(x - labelXOffset - 4f, mViewPortHandler.contentTop() + 110f - dataSet.getValueTextSize(), x + labelXOffset + 4f, mViewPortHandler.contentTop() + 110f + 8f), 4f, 4f, mLabelBackgroundPaint);
+                            c.drawRoundRect(new RectF(x - labelXOffset - dpToPx(2), mViewPortHandler.contentTop() + dpToPx(38f) - dataSet.getValueTextSize(),
+                                    x + labelXOffset + dpToPx(2), mViewPortHandler.contentTop() + dpToPx(38f) + dpToPx(3)), dpToPx(2), dpToPx(2), mLabelBackgroundPaint);
 
                             drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, x,
-                                    mViewPortHandler.contentTop() + 110f, dataSet.getValueTextColor(j / 2));
+                                    mViewPortHandler.contentTop() + dpToPx(38f), dataSet.getValueTextColor(j / 2));
                         } else if (j == 0 || j == (positions.length - 2)) {
-                            c.drawRoundRect(new RectF(valueX - labelXOffset - 4f, valueY - dataSet.getValueTextSize(), valueX + labelXOffset + 4f, valueY + 8f), 4f, 4f, mLabelBackgroundPaint);
+                            c.drawRoundRect(new RectF(valueX - labelXOffset - dpToPx(2), valueY - dataSet.getValueTextSize(),
+                                    valueX + labelXOffset + dpToPx(2), valueY + dpToPx(3)), dpToPx(2), dpToPx(2), mLabelBackgroundPaint);
 
                             drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, valueX, valueY, dataSet.getValueTextColor(j / 2));
                         }
@@ -679,7 +666,7 @@ public class LineChartRenderer extends LineRadarRenderer {
                 mRenderPaint.setColor(circleColor);
                 mRenderPaint.setStyle(Paint.Style.STROKE);
 
-                c.drawCircle(x, y, dataSet.getCircleRadius() - 2f,
+                c.drawCircle(x, y, dataSet.getCircleRadius() - dpToPx(0.5f),
                         mRenderPaint);
 
                 if (dataSet.isDrawCircleHoleEnabled()
@@ -772,5 +759,9 @@ public class LineChartRenderer extends LineRadarRenderer {
             mDrawBitmap.clear();
             mDrawBitmap = null;
         }
+    }
+
+    public float dpToPx(float dp) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, displayMetrics);
     }
 }

@@ -241,4 +241,15 @@ public class RealmBarDataSet<T extends RealmObject> extends RealmBarLineScatterC
         return mStackLabels;
     }
 
+    @Override
+    public int getSecondaryColor() {
+        return 0;
+    }
+
+    @Override
+    public Integer getSecondaryIndex() {
+        //not implemented
+        return null;
+    }
+
 }
