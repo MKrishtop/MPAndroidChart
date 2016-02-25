@@ -58,6 +58,10 @@ public class Highlight {
         this.mRange = range;
     }
 
+    public void setXIndex(int mXIndex) {
+        this.mXIndex = mXIndex;
+    }
+
     /**
      * returns the index of the DataSet the highlighted value is in
      * 

@@ -112,6 +112,8 @@ public interface IDataSet<T extends Entry> {
      */
     float getYValForXIndex(int xIndex);
 
+    int getNearestXIndex(int xIndex);
+
     /**
      * This method returns the actual
      * index in the Entry array of the DataSet for a given xIndex. IMPORTANT: This method does

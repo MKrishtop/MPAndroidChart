@@ -694,6 +694,10 @@ public class LineChartRenderer extends LineRadarRenderer {
 
     @Override
     public void drawHighlighted(Canvas c, Highlight[] indices) {
+        for (Highlight highlight : indices) {
+            ILineDataSet set = mChart.getLineData().getDataSetByIndex(highlight.getDataSetIndex());
+            highlight.setXIndex(set.getNearestXIndex(highlight.getXIndex()));
+        }
 
         for (int i = 0; i < indices.length; i++) {
 

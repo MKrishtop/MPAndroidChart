@@ -215,6 +215,12 @@ public abstract class RealmBaseDataSet<T extends RealmObject, S extends Entry> e
     }
 
     @Override
+    public int getNearestXIndex(int xIndex) {
+        //Not implemented
+        return -Integer.MAX_VALUE;
+    }
+
+    @Override
     public boolean addEntry(S e) {
 
         if (e == null)

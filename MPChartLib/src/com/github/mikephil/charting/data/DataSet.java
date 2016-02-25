@@ -302,6 +302,22 @@ public abstract class DataSet<T extends Entry> extends BaseDataSet<T> {
             return Float.NaN;
     }
 
+    @Override
+    public int getNearestXIndex(int xIndex) {
+        T entry = getEntryForXIndex(xIndex);
+        if (entry == null) {
+            int minIndex = mYVals.get(0).getXIndex();
+            int maxIndex = mYVals.get(mYVals.size() - 1).getXIndex();
+
+            if (minIndex > xIndex) {
+                entry = getEntryForXIndex(minIndex);
+            } else if (maxIndex < xIndex) {
+                entry = getEntryForXIndex(maxIndex);
+            }
+        }
+        return entry == null ? -1 : entry.getXIndex();
+    }
+
     /**
      * Returns all Entry objects at the given xIndex. INFORMATION: This method
      * does calculations at runtime. Do not over-use in performance critical
