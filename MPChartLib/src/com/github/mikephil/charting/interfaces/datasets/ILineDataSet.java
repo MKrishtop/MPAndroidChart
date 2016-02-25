@@ -13,6 +13,7 @@ public interface ILineDataSet extends ILineRadarDataSet<Entry> {
 
     int STYLE_ALL = 1;
     int STYLE_FIRST_END = 2;
+    int STYLE_FROM_ZERO = 4;
 
     int APPROXIMATION_NONE = 1;
     int APPROXIMATION_QUADRATIC = 2;

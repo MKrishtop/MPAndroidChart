@@ -190,7 +190,7 @@ public class LineChartRenderer extends LineRadarRenderer {
             Entry next = dataSet.getEntryForIndex(minx + 1);
 
             // let the spline start
-            cubicPath.moveTo(cur.getXIndex(), cur.getVal() * phaseY);
+            cubicPath.moveTo(isFromZero(dataSet) ? 0 : cur.getXIndex(), isFromZero(dataSet) ? 0 : cur.getVal() * phaseY);
 
             prevDx = (cur.getXIndex() - prev.getXIndex()) * intensity;
             prevDy = (cur.getVal() - prev.getVal()) * intensity;
@@ -405,7 +405,7 @@ public class LineChartRenderer extends LineRadarRenderer {
         Path filled = new Path();
         Entry entry = dataSet.getEntryForIndex(from);
 
-        filled.moveTo(entry.getXIndex(), fillMin);
+        filled.moveTo(isFromZero(dataSet) ? 0 : entry.getXIndex(), isFromZero(dataSet) ? 0 : fillMin);
         filled.lineTo(entry.getXIndex(), entry.getVal() * phaseY);
 
         // create a new path
@@ -462,7 +462,7 @@ public class LineChartRenderer extends LineRadarRenderer {
             Entry cur = dataSet.getEntryForIndex(minx);
 
             // let the spline start
-            quadraticPath.moveTo(cur.getXIndex(), cur.getVal() * phaseY);
+            quadraticPath.moveTo(cur.getXIndex(), isFromZero(dataSet) ? 0f : cur.getVal() * phaseY);
 
             for (int j = minx + 1, count = Math.min(size, entryCount); j < count; j++) {
                 prev = dataSet.getEntryForIndex(j - 1);
@@ -474,7 +474,6 @@ public class LineChartRenderer extends LineRadarRenderer {
                 quadraticPath.quadTo((prev.getXIndex() + midX) / 2, prev.getVal(), midX, midY);
                 quadraticPath.quadTo((midX + cur.getXIndex()) / 2, cur.getVal(), cur.getXIndex(), cur.getVal());
             }
-
         }
 
         // if drawing filled is enabled
@@ -546,8 +545,7 @@ public class LineChartRenderer extends LineRadarRenderer {
                         continue;
 
                     if (highlights == null) {
-                        if ((dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END
-                                && (!(j == 0 || j == (positions.length - 2)))))
+                        if ((isFirstEnd(dataSet) && (!(j == 0 || j == (positions.length - 2)))))
                             continue;
                     } else {
                         if (!hasIndexInHighlighted(highlights, j / 2))
@@ -556,11 +554,13 @@ public class LineChartRenderer extends LineRadarRenderer {
 
                     Entry entry = dataSet.getEntryForIndex(j / 2 + minx);
 
-                    if (dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END) {
+                    float value = entry.getVal();
+
+                    if (isFirstEnd(dataSet)) {
                         float valueX = 0f;
                         float valueY = 0f;
 
-                        String text = dataSet.getValueFormatter().getFormattedValue(entry.getVal(), entry, i, mViewPortHandler);
+                        String text = dataSet.getValueFormatter().getFormattedValue(value, entry, i, mViewPortHandler);
 
                         float labelXOffset = mValuePaint.measureText(text) / 2f;
 
@@ -579,17 +579,16 @@ public class LineChartRenderer extends LineRadarRenderer {
                             c.drawRoundRect(new RectF(x - labelXOffset - dpToPx(2), mViewPortHandler.contentTop() + dpToPx(38f) - dataSet.getValueTextSize(),
                                     x + labelXOffset + dpToPx(2), mViewPortHandler.contentTop() + dpToPx(38f) + dpToPx(3)), dpToPx(2), dpToPx(2), mLabelBackgroundPaint);
 
-                            drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, x,
+                            drawValue(c, dataSet.getValueFormatter(), value, entry, i, x,
                                     mViewPortHandler.contentTop() + dpToPx(38f), dataSet.getValueTextColor(j / 2));
-                        } else if (j == 0 || j == (positions.length - 2)) {
+                        } else if ((j == 0 || j == (positions.length - 2)) && !(isFromZero(dataSet))) {
                             c.drawRoundRect(new RectF(valueX - labelXOffset - dpToPx(2), valueY - dataSet.getValueTextSize(),
                                     valueX + labelXOffset + dpToPx(2), valueY + dpToPx(3)), dpToPx(2), dpToPx(2), mLabelBackgroundPaint);
 
-                            drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, valueX, valueY, dataSet.getValueTextColor(j / 2));
+                            drawValue(c, dataSet.getValueFormatter(), value, entry, i, valueX, valueY, dataSet.getValueTextColor(j / 2));
                         }
                     } else {
-                        drawValue(c, dataSet.getValueFormatter(), entry.getVal(), entry, i, x,
-                                y - valOffset, dataSet.getValueTextColor(j / 2));
+                        drawValue(c, dataSet.getValueFormatter(), value, entry, i, x, y - valOffset, dataSet.getValueTextColor(j / 2));
                     }
                 }
             }
@@ -657,8 +656,7 @@ public class LineChartRenderer extends LineRadarRenderer {
                 if (!mViewPortHandler.isInBoundsLeft(x) || !mViewPortHandler.isInBoundsY(y))
                     continue;
 
-                if ((dataSet.drawStyle() == ILineDataSet.STYLE_FIRST_END
-                        && (!(j == 0 || j == (count - 2)))) && !hasIndexInHighlighted(highlights, j / 2))
+                if ((isFirstEnd(dataSet) && (!(j == 0 || j == (count - 2)))) && !hasIndexInHighlighted(highlights, j / 2))
                     continue;
 
                 int circleColor = dataSet.getCircleColor(j / 2 + minx);
@@ -666,12 +664,16 @@ public class LineChartRenderer extends LineRadarRenderer {
                 mRenderPaint.setColor(circleColor);
                 mRenderPaint.setStyle(Paint.Style.STROKE);
 
-                c.drawCircle(x, y, dataSet.getCircleRadius() - dpToPx(0.5f),
+                float[] pixelVals = {0f, 0f};
+                trans.pointValuesToPixel(pixelVals);
+                float valY = isFromZero(dataSet) && j == 0 ? pixelVals[1] : y;
+
+                c.drawCircle(x, valY, dataSet.getCircleRadius() - dpToPx(0.5f),
                         mRenderPaint);
 
                 if (dataSet.isDrawCircleHoleEnabled()
                         && circleColor != mCirclePaintInner.getColor())
-                    c.drawCircle(x, y,
+                    c.drawCircle(x, valY,
                             halfsize,
                             mCirclePaintInner);
             }
@@ -763,5 +765,13 @@ public class LineChartRenderer extends LineRadarRenderer {
 
     public float dpToPx(float dp) {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, displayMetrics);
+    }
+
+    boolean isFirstEnd(ILineDataSet dataSet) {
+        return (dataSet.drawStyle() & ILineDataSet.STYLE_FIRST_END) != 0;
+    }
+
+    boolean isFromZero(ILineDataSet dataSet) {
+        return (dataSet.drawStyle() & ILineDataSet.STYLE_FROM_ZERO) != 0;
     }
 }

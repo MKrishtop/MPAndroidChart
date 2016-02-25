@@ -37,7 +37,7 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
     /** if true, drawing circles is enabled */
     private boolean mDrawCircles = true;
 
-    private int mDrawsStyle = STYLE_ALL;
+    private int mDrawStyle = STYLE_ALL;
 
     private int mApproximation = ILineDataSet.APPROXIMATION_NONE;
 
@@ -73,7 +73,7 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
         copied.mCircleColors = mCircleColors;
         copied.mDashPathEffect = mDashPathEffect;
         copied.mDrawCircles = mDrawCircles;
-        copied.mDrawsStyle = mDrawsStyle;
+        copied.mDrawStyle = mDrawStyle;
         copied.mApproximation = mApproximation;
         copied.mHighLightColor = mHighLightColor;
 
@@ -192,12 +192,12 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
     }
 
     public void setDrawStyle(int drawStyle) {
-        this.mDrawsStyle = drawStyle;
+        this.mDrawStyle = drawStyle;
     }
 
     @Override
     public int drawStyle() {
-        return mDrawsStyle;
+        return mDrawStyle;
     }
 
     public void setApproximation(int approximation) {
