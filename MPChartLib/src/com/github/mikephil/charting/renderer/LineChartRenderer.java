@@ -722,7 +722,7 @@ public class LineChartRenderer extends LineRadarRenderer {
             // y-position
 
             float[] pts = new float[]{
-                    xIndex, y
+                    xIndex, indices[i].getXIndex() == 0 && isFromZero(set) ? 0f : y
             };
 
             mChart.getTransformer(set.getAxisDependency()).pointValuesToPixel(pts);

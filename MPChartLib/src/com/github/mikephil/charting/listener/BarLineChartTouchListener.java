@@ -530,6 +530,7 @@ public class BarLineChartTouchListener extends ChartTouchListener<BarLineChartBa
         }
 
         mNeedHighlightOnDrug = true;
+        performHighlightDrag(e);
     }
 
     @Override
