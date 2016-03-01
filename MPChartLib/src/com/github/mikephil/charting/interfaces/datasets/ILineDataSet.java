@@ -91,4 +91,7 @@ public interface ILineDataSet extends ILineRadarDataSet<Entry> {
      * @return
      */
     FillFormatter getFillFormatter();
+
+    Double getHighlightBottomLimit();
+    Double getHighlightTopLimit();
 }

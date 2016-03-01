@@ -43,6 +43,8 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
 
     private boolean mDrawCircleHole = true;
 
+    private Double highlightTopLimit = null;
+    private Double highlightBottomLimit = null;
 
     public LineDataSet(List<Entry> yVals, String label) {
         super(yVals, label);
@@ -311,6 +313,24 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
     @Override
     public boolean isDrawCircleHoleEnabled() {
         return mDrawCircleHole;
+    }
+
+    @Override
+    public Double getHighlightTopLimit() {
+        return highlightTopLimit;
+    }
+
+    public void setHighlightTopLimit(Double highlightTopLimit) {
+        this.highlightTopLimit = highlightTopLimit;
+    }
+
+    @Override
+    public Double getHighlightBottomLimit() {
+        return highlightBottomLimit;
+    }
+
+    public void setHighlightBottomLimit(Double highlightBottomLimit) {
+        this.highlightBottomLimit = highlightBottomLimit;
     }
 
     /**

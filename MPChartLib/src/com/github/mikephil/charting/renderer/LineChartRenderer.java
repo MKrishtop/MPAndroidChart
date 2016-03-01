@@ -462,7 +462,7 @@ public class LineChartRenderer extends LineRadarRenderer {
             Entry cur = dataSet.getEntryForIndex(minx);
 
             // let the spline start
-            quadraticPath.moveTo(cur.getXIndex(), isFromZero(dataSet) ? 0f : cur.getVal() * phaseY);
+            quadraticPath.moveTo(cur.getXIndex(), cur.getVal() * phaseY);
 
             for (int j = minx + 1, count = Math.min(size, entryCount); j < count; j++) {
                 prev = dataSet.getEntryForIndex(j - 1);
@@ -486,6 +486,19 @@ public class LineChartRenderer extends LineRadarRenderer {
         mRenderPaint.setStyle(Paint.Style.STROKE);
 
         trans.pathValueToPixel(quadraticPath);
+
+        if (isFromZero(dataSet)) {
+            float[] pixelVals = {0f, 0f, dataSet.getEntryForIndex(0).getXIndex(), dataSet.getEntryForIndex(0).getVal() * phaseY};
+            trans.pointValuesToPixel(pixelVals);
+            pixelVals[0] = mViewPortHandler.contentLeft();
+
+            float midX = ((pixelVals[0] + pixelVals[2]) / 2f);
+            float midY = ((pixelVals[1] + pixelVals[3]) / 2f);
+
+            quadraticPath.moveTo(pixelVals[0], pixelVals[1]);
+            quadraticPath.quadTo((pixelVals[0] + midX) / 2f, pixelVals[1], midX, midY);
+            quadraticPath.quadTo((pixelVals[2] + midX) / 2f, pixelVals[3], pixelVals[2], pixelVals[3]);
+        }
 
         mBitmapCanvas.drawPath(quadraticPath, mRenderPaint);
 
@@ -573,7 +586,7 @@ public class LineChartRenderer extends LineRadarRenderer {
                         }
 
                         if (highlights != null) {
-                            if (j == 0 || j == (positions.length - 2)) {
+                            if (j == 0 || (j == (positions.length - 2) && entry.getXIndex() == mMaxX)) {
                                 x = valueX;
                             }
                             c.drawRoundRect(new RectF(x - labelXOffset - dpToPx(2), mViewPortHandler.contentTop() + dpToPx(38f) - dataSet.getValueTextSize(),
@@ -659,21 +672,41 @@ public class LineChartRenderer extends LineRadarRenderer {
                 if ((isFirstEnd(dataSet) && (!(j == 0 || j == (count - 2)))) && !hasIndexInHighlighted(highlights, j / 2))
                     continue;
 
+                if (isFromZero(dataSet) && j == 0 && j != (count - 2)) {
+                    continue;
+                }
+
                 int circleColor = dataSet.getCircleColor(j / 2 + minx);
 
                 mRenderPaint.setColor(circleColor);
                 mRenderPaint.setStyle(Paint.Style.STROKE);
 
-                float[] pixelVals = {0f, 0f};
-                trans.pointValuesToPixel(pixelVals);
-                float valY = isFromZero(dataSet) && j == 0 ? pixelVals[1] : y;
-
-                c.drawCircle(x, valY, dataSet.getCircleRadius() - dpToPx(0.5f),
+                c.drawCircle(x, y, dataSet.getCircleRadius() - dpToPx(0.5f),
                         mRenderPaint);
 
                 if (dataSet.isDrawCircleHoleEnabled()
                         && circleColor != mCirclePaintInner.getColor())
-                    c.drawCircle(x, valY,
+                    c.drawCircle(x, y,
+                            halfsize,
+                            mCirclePaintInner);
+            }
+
+            if (isFromZero(dataSet)) {
+                float[] pixelVals = {0f, 0f};
+                trans.pointValuesToPixel(pixelVals);
+                float valX = mViewPortHandler.contentLeft();
+                float valY = pixelVals[1];
+
+                int circleColor = dataSet.getCircleColor(minx);
+                mRenderPaint.setColor(circleColor);
+                mRenderPaint.setStyle(Paint.Style.STROKE);
+
+                c.drawCircle(valX, valY, dataSet.getCircleRadius() - dpToPx(0.5f),
+                        mRenderPaint);
+
+                if (dataSet.isDrawCircleHoleEnabled()
+                        && circleColor != mCirclePaintInner.getColor())
+                    c.drawCircle(valX, valY,
                             halfsize,
                             mCirclePaintInner);
             }
@@ -721,8 +754,10 @@ public class LineChartRenderer extends LineRadarRenderer {
             // the
             // y-position
 
-            float[] pts = new float[]{
-                    xIndex, indices[i].getXIndex() == 0 && isFromZero(set) ? 0f : y
+            float[] pts = set.getHighlightTopLimit() != null && set.getHighlightBottomLimit() != null ? new float[]{
+                    xIndex, y, 0f, set.getHighlightTopLimit().floatValue(), 0f, set.getHighlightBottomLimit().floatValue()
+            } :new float[]{
+                    xIndex, y
             };
 
             mChart.getTransformer(set.getAxisDependency()).pointValuesToPixel(pts);

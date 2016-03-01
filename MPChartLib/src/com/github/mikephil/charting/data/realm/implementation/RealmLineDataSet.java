@@ -338,4 +338,16 @@ public class RealmLineDataSet<T extends RealmObject> extends RealmLineRadarDataS
     public FillFormatter getFillFormatter() {
         return mFillFormatter;
     }
+
+    @Override
+    public Double getHighlightBottomLimit() {
+        //not implemented
+        return null;
+    }
+
+    @Override
+    public Double getHighlightTopLimit() {
+        //not implemented
+        return null;
+    }
 }

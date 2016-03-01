@@ -40,10 +40,11 @@ public abstract class LineScatterCandleRadarRenderer extends DataRenderer {
         // draw vertical highlight lines
         if (set.isVerticalHighlightIndicatorEnabled()) {
 
+            boolean drawWithLimits = pts.length >= 6;
             // create vertical path
             mHighlightLinePath.reset();
-            mHighlightLinePath.moveTo(pts[0], mViewPortHandler.contentTop());
-            mHighlightLinePath.lineTo(pts[0], mViewPortHandler.contentBottom());
+            mHighlightLinePath.moveTo(pts[0], drawWithLimits ? pts[3] : mViewPortHandler.contentTop());
+            mHighlightLinePath.lineTo(pts[0], drawWithLimits ? pts[5] : mViewPortHandler.contentBottom());
 
             c.drawPath(mHighlightLinePath, mHighlightPaint);
         }
