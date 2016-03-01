@@ -672,7 +672,7 @@ public class LineChartRenderer extends LineRadarRenderer {
                 if ((isFirstEnd(dataSet) && (!(j == 0 || j == (count - 2)))) && !hasIndexInHighlighted(highlights, j / 2))
                     continue;
 
-                if (isFromZero(dataSet) && j == 0 && j != (count - 2)) {
+                if (isFromZero(dataSet) && j == 0 && j != (count - 2) && (highlights == null || highlights[0].getXIndex() != 0)) {
                     continue;
                 }
 
