@@ -2,6 +2,7 @@
 package com.github.mikephil.charting.charts;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
@@ -9,8 +10,11 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 
+import com.github.mikephil.charting.data.BitmapEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.highlight.Highlight;
@@ -87,6 +91,8 @@ public class PieChart extends PieRadarChartBase<PieData> {
     private float mCenterTextRadiusPercent = 100.f;
 
     protected float mMaxAngle = 360f;
+
+    public SparseArray<Bitmap> bitmapsCache = new SparseArray<>();
 
     public PieChart(Context context) {
         super(context);
@@ -647,4 +653,18 @@ public class PieChart extends PieRadarChartBase<PieData> {
         super.onDetachedFromWindow();
     }
 
+    @Override
+    public void setData(PieData data) {
+        super.setData(data);
+        bitmapsCache = new SparseArray<>();
+
+        for (int i = 0; i < data.getDataSet().getEntryCount(); i++) {
+            Entry entry = data.getDataSet().getEntryForIndex(i);
+            if (entry instanceof  BitmapEntry) {
+                BitmapEntry bitmapEntry = ((BitmapEntry) entry);
+                bitmapsCache.put(bitmapEntry.getBitmapResId(),
+                        ((BitmapDrawable) getResources().getDrawable(bitmapEntry.getBitmapResId())).getBitmap());
+            }
+        }
+    }
 }

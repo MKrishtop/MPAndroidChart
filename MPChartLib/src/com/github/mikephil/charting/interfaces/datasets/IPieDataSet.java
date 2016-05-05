@@ -1,5 +1,7 @@
 package com.github.mikephil.charting.interfaces.datasets;
 
+import android.graphics.DashPathEffect;
+
 import com.github.mikephil.charting.data.Entry;
 
 /**
@@ -22,5 +24,24 @@ public interface IPieDataSet extends IDataSet<Entry> {
      * @return
      */
     float getSelectionShift();
+
+    /**
+     * Returns the DashPathEffect that is used for drawing the lines.
+     *
+     * @return
+     */
+    DashPathEffect getDashPathEffect();
+
+    /**
+     * Returns true if the dashed-line effect is enabled, false if not.
+     * If the DashPathEffect object is null, also return false here.
+     *
+     * @return
+     */
+    boolean isDashedLineEnabled();
+
+    int getStrokeColor();
+
+    int getHighlightedColor();
 }
 

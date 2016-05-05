@@ -12,6 +12,7 @@ import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.text.Layout;
 import android.text.StaticLayout;
@@ -20,6 +21,7 @@ import android.text.TextPaint;
 import com.github.mikephil.charting.animation.ChartAnimator;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.data.BitmapEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.formatter.ValueFormatter;
@@ -44,6 +46,11 @@ public class PieChartRenderer extends DataRenderer {
 
     protected Paint mSliceSpacePaint;
 
+    protected Paint mHighlightedPaint;
+    protected Paint mHighlightedStrokePaint;
+
+    protected Paint bitmapPaint =  new Paint(Paint.ANTI_ALIAS_FLAG);
+
     /**
      * paint object for the text that can be displayed in the center of the
      * chart
@@ -67,6 +74,14 @@ public class PieChartRenderer extends DataRenderer {
         super(animator, viewPortHandler);
         mChart = chart;
 
+        mHighlightedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mHighlightedPaint.setStyle(Style.FILL);
+
+        mHighlightedStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mHighlightedStrokePaint.setStyle(Style.STROKE);
+        mHighlightedStrokePaint.setColor(Color.parseColor("#FFFFFF"));
+        mHighlightedStrokePaint.setStrokeWidth(Utils.convertDpToPixel(1f));
+
         mHolePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mHolePaint.setColor(Color.WHITE);
         mHolePaint.setStyle(Style.FILL);
@@ -86,8 +101,6 @@ public class PieChartRenderer extends DataRenderer {
 
         mSliceSpacePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mSliceSpacePaint.setStyle(Style.STROKE);
-        mSliceSpacePaint.setColor(0xFFFFFFFF); // transparent
-        mSliceSpacePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
     }
 
     public Paint getPaintHole() {
@@ -140,6 +153,8 @@ public class PieChartRenderer extends DataRenderer {
 
         float sliceSpace = dataSet.getSliceSpace();
         mSliceSpacePaint.setStrokeWidth(sliceSpace);
+        mSliceSpacePaint.setPathEffect(dataSet.getDashPathEffect());
+        mSliceSpacePaint.setColor(dataSet.getStrokeColor());
 
         PointF center = mChart.getCenterOffsets();
 
@@ -151,25 +166,28 @@ public class PieChartRenderer extends DataRenderer {
 
         float[] drawAngles = mChart.getDrawAngles();
 
+        mRenderPaint.setColor(dataSet.getColor(0));
+        mBitmapCanvas.drawCircle(center.x, center.y, mChart.getRadius(), mRenderPaint);
+
         for (int j = 0; j < dataSet.getEntryCount(); j++) {
 
             float sliceAngle = drawAngles[j];
 
-            Entry e = dataSet.getEntryForIndex(j);
-
-            // draw only if the value is greater than zero
-            if ((Math.abs(e.getVal()) > 0.000001)) {
-
-                if (!mChart.needsHighlight(e.getXIndex(),
-                        mChart.getData().getIndexOfDataSet(dataSet))) {
-
-                    mRenderPaint.setColor(dataSet.getColor(j));
-                    mBitmapCanvas.drawArc(mChart.getCircleBox(),
-                            rotationAngle + angle * phaseY,
-                            sliceAngle * phaseY,
-                            true, mRenderPaint);
-                }
-            }
+//            Entry e = dataSet.getEntryForIndex(j);
+//
+//            // draw only if the value is greater than zero
+//            if ((Math.abs(e.getVal()) > 0.000001)) {
+//
+//                if (!mChart.needsHighlight(e.getXIndex(),
+//                        mChart.getData().getIndexOfDataSet(dataSet))) {
+//
+//                    mRenderPaint.setColor(dataSet.getColor(j));
+//                    mBitmapCanvas.drawArc(mChart.getCircleBox(),
+//                            rotationAngle + angle * phaseY,
+//                            sliceAngle * phaseY,
+//                            true, mRenderPaint);
+//                }
+//            }
 
             // draw the slice space
             if(sliceSpace > 0 && dataSet.getEntryCount() > 1) {
@@ -180,6 +198,9 @@ public class PieChartRenderer extends DataRenderer {
 
             angle += sliceAngle * phaseX;
         }
+
+        mBitmapCanvas.drawCircle(center.x, center.y, mChart.getRadius() - sliceSpace / 2f, mSliceSpacePaint);
+        mBitmapCanvas.drawCircle(center.x, center.y, mChart.getRadius() / 100 * mChart.getHoleRadius() + sliceSpace / 2f, mSliceSpacePaint);
 
         // cover the final slice with slice space
         if(sliceSpace > 0 && dataSet.getEntryCount() > 1) {
@@ -268,24 +289,40 @@ public class PieChartRenderer extends DataRenderer {
 
                 boolean drawYVals = dataSet.isDrawValuesEnabled();
 
-                // draw everything, depending on settings
-                if (drawXVals && drawYVals) {
+                if (entry instanceof BitmapEntry) {
+                    BitmapEntry bitmapEntry = ((BitmapEntry) entry);
 
-                    drawValue(c, formatter, value, entry, 0, x, y, dataSet.getValueTextColor(j));
+                    Bitmap categoryBitmap;
+                    if ((categoryBitmap = mChart.bitmapsCache.get(bitmapEntry.getBitmapResId())) != null) {
+                        if (mChart.needsHighlight(entry.getXIndex(), mChart.getData().getIndexOfDataSet(dataSet))) {
+                            bitmapPaint.setAlpha(255);
+                        } else {
+                            bitmapPaint.setAlpha(128);
+                        }
 
-                    if (j < data.getXValCount()) {
-                        c.drawText(data.getXVals().get(j), x, y + lineHeight,
-                                mValuePaint);
+                        c.drawBitmap(categoryBitmap, x - ((float) categoryBitmap.getWidth() ) / 2f
+                                , y - ((float) categoryBitmap.getHeight() ) / 2f, bitmapPaint);
                     }
+                } else {
+                    // draw everything, depending on settings
+                    if (drawXVals && drawYVals) {
 
-                } else if (drawXVals) {
-                    if (j < data.getXValCount()) {
-                        mValuePaint.setColor(dataSet.getValueTextColor(j));
-                        c.drawText(data.getXVals().get(j), x, y + lineHeight / 2f, mValuePaint);
+                        drawValue(c, formatter, value, entry, 0, x, y, dataSet.getValueTextColor(j));
+
+                        if (j < data.getXValCount()) {
+                            c.drawText(data.getXVals().get(j), x, y + lineHeight,
+                                    mValuePaint);
+                        }
+
+                    } else if (drawXVals) {
+                        if (j < data.getXValCount()) {
+                            mValuePaint.setColor(dataSet.getValueTextColor(j));
+                            c.drawText(data.getXVals().get(j), x, y + lineHeight / 2f, mValuePaint);
+                        }
+                    } else if (drawYVals) {
+
+                        drawValue(c, formatter, value, entry, 0, x, y + lineHeight / 2f, dataSet.getValueTextColor(j));
                     }
-                } else if (drawYVals) {
-
-                    drawValue(c, formatter, value, entry, 0, x, y + lineHeight / 2f, dataSet.getValueTextColor(j));
                 }
 
                 xIndex++;
@@ -433,7 +470,6 @@ public class PieChartRenderer extends DataRenderer {
             
             float sliceAngle = drawAngles[xIndex];
 
-            float shift = set.getSelectionShift();
             RectF circleBox = mChart.getCircleBox();
 
             /**
@@ -442,19 +478,39 @@ public class PieChartRenderer extends DataRenderer {
              *
              * @link https://github.com/wogg
              */
-            RectF highlighted = new RectF(circleBox.left - shift,
-                    circleBox.top - shift,
-                    circleBox.right + shift,
-                    circleBox.bottom + shift);
+            RectF highlighted = new RectF(circleBox.left,
+                    circleBox.top,
+                    circleBox.right,
+                    circleBox.bottom);
 
-            mRenderPaint.setColor(set.getColor(xIndex));
+            float holeOffset = circleBox.width() / 2f * (100 - mChart.getHoleRadius()) / 100f - set.getSliceSpace() / 2f;
+
+            RectF highlightedHole = new RectF(circleBox.left + holeOffset,
+                    circleBox.top + holeOffset,
+                    circleBox.right - holeOffset,
+                    circleBox.bottom - holeOffset);
+
+            mHighlightedPaint.setColor(set.getHighlightedColor());
 
             // redefine the rect that contains the arc so that the
             // highlighted pie is not cut off
             mBitmapCanvas.drawArc(highlighted,
                     rotationAngle + angle * phaseY,
                     sliceAngle * phaseY,
-                    true, mRenderPaint);
+                    true, mHighlightedPaint);
+
+            mBitmapCanvas.drawArc(highlighted,
+                    rotationAngle + angle * phaseY,
+                    sliceAngle * phaseY,
+                    true, mHighlightedStrokePaint);
+
+            mBitmapCanvas.drawArc(highlightedHole,
+                    rotationAngle + angle * phaseY,
+                    sliceAngle * phaseY,
+                    true, mHighlightedStrokePaint);
+
+            PointF pos = Utils.getPosition(mChart.getCenter(), mChart.getRadius(), rotationAngle * phaseX + angle * phaseY);
+            mBitmapCanvas.drawLine(mChart.getCenter().x, mChart.getCenter().y, pos.x, pos.y, mSliceSpacePaint);
         }
     }
 
